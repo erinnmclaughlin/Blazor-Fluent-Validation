@@ -1,0 +1,112 @@
+﻿@page "/"
+@using BlazorFluentValidation.Models 
+@using BlazorFluentValidation.Validators 
+
+<h1>Order Form</h1>
+
+<EditForm Model="NewOrder" OnValidSubmit="HandleValidSubmit">
+
+    <FluentValidator TValidator="OrderValidator" />
+
+    <div class="mb-3">
+        <label class="col-form-label">Name</label>
+        <InputText @bind-Value="NewOrder.Name" class="form-control" placeholder="e.g., Johnny Depp" />
+        <ValidationMessage For="(() => NewOrder.Name)" class="form-text" />
+    </div>
+
+    <h5>Order Items (@NewOrder.Items.Count)</h5>
+    <ValidationMessage For="(() => NewOrder.Items.Count)" />
+
+    @foreach (var item in NewOrder.Items)
+    {
+        <div class="row mb-3 justify-content-center">
+            <div class="col-3">
+                <label class="col-form-label">Quantity</label>
+                <InputNumber @bind-Value="item.Quantity" class="form-control" placeholder="e.g., 5" />
+                <ValidationMessage For="(() => item.Quantity)" class="form-text" />
+            </div>
+            <div class="col">
+                <label class="col-form-label">Description</label>
+                <InputText @bind-Value="item.Description" class="form-control" placeholder="e.g., Bottles of Rum" />
+                <ValidationMessage For="(() => item.Description)" class="form-text" />
+            </div>
+            <div class="col-1 align-self-center">
+                <a class="btn btn-danger text-light" @onclick="(() => RemoveOrderItem(item))">x</a>
+            </div>
+        </div>
+    }
+
+    <div class="mb-3">
+        <a class="btn btn-info text-light" @onclick="AddOrderItem">Add Another Item</a>
+    </div>
+
+    <button class="btn btn-success" type="submit">Submit Order</button>
+
+
+</EditForm>
+
+<h2 class="mt-5">Placed Orders</h2>
+@if (!Orders.Any())
+{
+    <p>No orders have been placed.</p>
+}
+else 
+{ 
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Order Name</th>
+                <th>Items</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Orders)
+            {
+                <tr>
+                    <td>@order.Name</td>
+                    <td>
+                        <ul>
+                            @foreach (var item in order.Items)
+                            {
+                                <li>@item.Description (@item.Quantity)</li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private Order NewOrder { get; set; }
+    private List<Order> Orders { get; set; } = new();
+
+    private void HandleValidSubmit()
+    {
+        Orders.Add(NewOrder);
+        ResetOrder();
+    }
+
+    private void AddOrderItem()
+    {
+        NewOrder.Items.Add(new OrderItem());
+    }
+
+    private void RemoveOrderItem(OrderItem item)
+    {
+        NewOrder.Items.Remove(item);
+    }
+
+    protected override void OnInitialized()
+    {
+        ResetOrder();
+    }
+
+    private void ResetOrder()
+    {
+        NewOrder = new Order();
+        AddOrderItem(); // start with one item in the list
+    }
+}
